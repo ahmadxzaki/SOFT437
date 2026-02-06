@@ -81,12 +81,12 @@ sequenceDiagram
     participant W as Web Server
     participant A as Application Server
 
-    U->>W: some HTTPS req
+    U->>W: some HTTP req
     activate W
     alt Static p=0.56
-        W-->>U: relevant .html file<br>from disk
+        W-->>U: relevant .html file<br>from disK
     else Dynamic p=0.44
-        W->>A: Forward request
+        W->>A: Forward HTTP request
         activate A
         A-->>W: constructed .html file
         deactivate A
@@ -100,99 +100,102 @@ sequenceDiagram
 sequenceDiagram
     actor U as User / Browser
     participant W as Web Server
-    participant H as Application Server
+    participant A as Application Server
     participant DB as Database Server
 
-    U->>W: HTTPS GET /search
+    U->>W: HTTP GET /search
     activate W
-    W->>H: Forward request
-    activate H
-    note over H, DB: Create Search Page
-    H-->>W: HTTP response <br> with HTML of the search page
-    deactivate H
-    W-->>U: HTML of the search page
+    W->>A: Forward HTTP request
+    deactivate W
+    activate A
+    note over A, DB: Create Search Page
+    A--)W: HTTP response <br> with HTML of the search page
+    deactivate A
+    activate W
+    W--)U: Forward HTTP response
     deactivate W
 ```
 
 ## Create Search Page
 ```mermaid
-%%{init: {
-  "theme": "dark",
-  "themeVariables": {
+%% %%{init: {
+%%   "theme": "dark",
+%%   "themeVariables": {
 
-    "textColor": "#ffffff",
-    "actorLineColor": "#787878",
-    "signalColor": "#a0a0a0",
-    "signalTextColor": "#ffffff",
-    "loopTextColor": "#ffffff",
+%%     "textColor": "#ffffff",
+%%     "actorLineColor": "#787878",
+%%     "signalColor": "#a0a0a0",
+%%     "signalTextColor": "#ffffff",
+%%     "loopTextColor": "#ffffff",
     
-    "activationBkgColor": "#404040",
-    "activationBorderColor": "#5d5d5d"
-  }
-}}%%
+%%     "activationBkgColor": "#404040",
+%%     "activationBorderColor": "#5d5d5d"
+%%   }
+%% }}%%
 sequenceDiagram
-    participant H as :HttpHandler<br> <<App. Server>>
-    participant P as :RequestParser<br> <<App. Server>>
-    participant S as :SearchPageCreator<br> <<App. Server>>
-    participant Repo as :BookRepository<br> <<App. Server>>
-    participant DB as Database<br><<DB Server>>
+    participant H as :HttpHandler<br> {App. Server}
+    participant P as :RequestParser<br> {App. Server}
+    participant S as :SearchPageCreator<br> {App. Server}
+    participant Repo as :BookRepository<br> {App. Server}
+    participant DB as Database<br>{DB Server}
 
     activate H
     H->>P: parseSearchReq(req)
     activate P
 
-    alt Invalid request
-        P->>H: Request is invalid
+    break Invalid request
+        P--)H: Request is invalid
         deactivate P
-        H->>S: buildSearchErrorPage()
+        H->>S: getSearchErrorPage()
         activate S
-        S-->>H: HTML of the search page with an error pageHtml := buildSearchErrorPage()
-        deactivate S
-
-    else Valid request
-        activate P
-        P-->>H: Search query <br>and filters
-        deactivate P
-        H->>S: buildSearchPage(query, filters)
-        activate S
-
-        S->>Repo: getBooks(query, filters)
-        activate Repo
-
-        activate Repo
-        Repo->>Repo: formulateBookSearchQuery(query, filters)
-        deactivate Repo
-
-        Repo->>DB: Book search query
-        activate DB
-            activate DB
-            DB->>DB: Retrive all books<br> matching the query<br> and filters
-            deactivate DB
-        DB-->>Repo: Book search query response
-        deactivate DB
-
-        activate Repo
-        Repo->>Repo: createBookList(db_resp)
-        deactivate Repo
-
-        Repo-->>S: List of books
-        deactivate Repo
-
-        alt len(book list) > 0
-                activate S
-                S->>S: generateSearchResultsHtml(books)
-                deactivate S
-            S-->>H: HTML of the search results page
-            deactivate S
-        else len(book list) == 0
-            activate S
-                activate S
-                S->>S: generateNoResultsFoundHtml()
-                deactivate S
-            S-->>H: HTML of the no search results found page
-        end
+        S--)H: HTML of the search page with an error
         deactivate S
     end
+
+    %% else Valid request
+    activate P
+    P--)H: Search query
+    deactivate P
+    H->>S: getSearchPage(filters)
+    activate S
+
+    S->>Repo: getBooks(filters)
+    activate Repo
+
+    activate Repo
+    Repo->>Repo: formulateBookSearchQuery(filters)
+    deactivate Repo
+
+    Repo->>DB: Book search query
+    activate DB
+        activate DB
+        DB->>DB: Retrive all books<br> matching the query<br> and filters
+        deactivate DB
+    DB--)Repo: Book search query response
+    deactivate DB
+
+    activate Repo
+    Repo->>Repo: createBookList(db_resp)
+    deactivate Repo
+
+    Repo--)S: List of books
+    deactivate Repo
+
+    alt len(book list) > 0
+            activate S
+            S->>S: generateSearchResultsHtml(books)
+            deactivate S
+        S--)H: HTML of the search results page
+        deactivate S
+    else len(book list) == 0
+        activate S
+            activate S
+            S->>S: generateNoResultsFoundHtml()
+            deactivate S
+        S--)H: HTML of the no search results found page
+    end
+    deactivate S
+    
     
     activate H
     H->>H: Write HTTP response<br>to connection
