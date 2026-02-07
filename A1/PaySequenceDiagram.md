@@ -1,19 +1,7 @@
+[Go back to index](README.md)
+
 # Pay
 ```mermaid
-%% %%{init: {
-%%   "theme": "dark",
-%%   "themeVariables": {
-
-%%     "textColor": "#ffffff",
-%%     "actorLineColor": "#787878",
-%%     "signalColor": "#a0a0a0",
-%%     "signalTextColor": "#ffffff",
-%%     "loopTextColor": "#ffffff",
-    
-%%     "activationBkgColor": "#404040",
-%%     "activationBorderColor": "#5d5d5d"
-%%   }
-%% }}%%
 sequenceDiagram
     actor U as User / Browser
     participant W as Web Server
@@ -28,8 +16,31 @@ sequenceDiagram
     deactivate W
     activate A
     
-    note over W, DB: Enforce user has valid token
+    activate A
+    A->>A: Check request cookies for session token
+    deactivate A
 
+    break No session token
+        A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
+        activate W
+        W --) U: Forward HTTP response 
+        deactivate W
+    end
+
+    %% Session token is present
+    A ->> DB: Check that token isn't expired
+    activate DB
+    DB --) A: Token status
+    deactivate DB
+
+    break Token is expired
+        A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
+        activate W
+        W-->U: Forward HTTP response
+        activate W
+    end
+
+    %% Token isn't expired
     A ->> DB: Get user information<br>from session token
     activate DB
     DB --) A: User and cart information
@@ -45,6 +56,7 @@ sequenceDiagram
         deactivate W
     end
 
+    %% There are items in the cart
     A ->> DB: Get stock of items in cart
     activate DB
     DB --) A: Stock info
@@ -62,6 +74,7 @@ sequenceDiagram
     end
     activate A
 
+    %% All cart items are in stock
     A --) W: HTTP response <br> with HTML of the<br>checkout page
     activate W
     deactivate A
@@ -89,8 +102,32 @@ sequenceDiagram
         deactivate W
     end
     
-    note over W, DB: Enforce user has valid token
+    %% Checkout request is valid
+    activate A
+    A->>A: Check request cookies for session token
+    deactivate A
 
+    break No session token
+        A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
+        activate W
+        W --) U: Forward HTTP response 
+        deactivate W
+    end
+
+    %% Session token present
+    A ->> DB: Check that token isn't expired
+    activate DB
+    DB --) A: Token status
+    deactivate DB
+
+    break Token is expired
+        A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
+        activate W
+        W-->U: Forward HTTP response
+        activate W
+    end
+
+    %% Token is not expired
     A ->> DB: Get payment information<br>from session token
     activate DB
     DB --) A: Payment information
@@ -112,8 +149,8 @@ sequenceDiagram
         deactivate W
     end
     activate A
-    %% else Payment Success
-    
+
+    %% Payment Succeeds
     A ->> DB: Store order information
     activate DB
     DB --) A: Return created order's ID
@@ -139,58 +176,9 @@ sequenceDiagram
         W --) U: Forward HTTP response
         deactivate W
     and
-        A ->> DB: Empty user's cart
+        A ->> DB: Empty user's cart and <br>decrement book stock count
         activate DB
         DB --) A: Ack
         deactivate DB
     end
-    
-    
-```
-
-## Enforce user has valid token
-```mermaid
-%% %%{init: {
-%%   "theme": "dark",
-%%   "themeVariables": {
-
-%%     "textColor": "#ffffff",
-%%     "actorLineColor": "#787878",
-%%     "signalColor": "#a0a0a0",
-%%     "signalTextColor": "#ffffff",
-%%     "loopTextColor": "#ffffff",
-    
-%%     "activationBkgColor": "#404040",
-%%     "activationBorderColor": "#5d5d5d"
-%%   }
-%% }}%%
-sequenceDiagram
-    participant W as Web Server
-    participant A as Application Server
-    participant DB as Database Server
-    
-    activate A
-    activate A
-    A->>A: Check request cookies for session token
-    deactivate A
-    break No session token
-        A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
-        
-        activate W
-        note over W, DB: Login/Register
-        deactivate W
-    end
-    %% else Session token present
-    A ->> DB: Check that token isn't expired
-    activate DB
-    DB --) A: Token status
-    deactivate DB
-    break Token is expired
-    A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
-    activate W
-    note over W, DB: Login/Register
-    deactivate W
-    end
-    deactivate A
-    %% else Token is valid
 ```

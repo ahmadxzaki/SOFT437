@@ -1,3 +1,6 @@
+[Go back to index](README.md)
+
+# Entity Class Diagram
 ```mermaid
 classDiagram
     direction LR
@@ -95,10 +98,6 @@ classDiagram
         -country: String
         +format() String
     }
- 
-    class RegisterResult {
-        successful: boolean
-    }
         
     Cart "*" o-- "*" Book
     Book "1" *-- "0..1" ProductInfo
@@ -116,5 +115,35 @@ classDiagram
 
     ProductInfo "*" *-- "1" Review
     Order o-- OrderStatus
-    
+```
+## Standalone Entities
+```mermaid
+classDiagram
+    direction LR
+
+    namespace _ {
+        class RegisterResult {
+            -successful: boolean
+            +getSuccessful(): boolean
+        }
+
+        class HTML {
+            -content: String
+            +getContent() String
+        }
+
+        class HTTPRequest {
+            +headers: Map~String,String~
+            +body: Map~String,Any~
+        }
+
+        class LoginResult {
+            -token: String
+            -usernameNotFound: boolean
+            -passwordIncorrect: boolean
+            +isUsernameNotFound(): boolean
+            +isPasswordIncorrect(): boolean
+            +getToken(): boolean
+        }
+    }
 ```

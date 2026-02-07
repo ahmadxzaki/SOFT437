@@ -1,3 +1,5 @@
+[Go back to index](README.md)
+
 # Login/Register
 ```mermaid
 sequenceDiagram
@@ -9,49 +11,42 @@ sequenceDiagram
     U->>W: HTTP GET /login?redirectUrl=<addr>
     activate W
     W--)U: Login page in HTML
+    deactivate W
     alt User has an account
         U->>U: Enter username<br>and password
         U->>W: POST /login
+        activate W
         W->>A: Forward HTTP request
+        deactivate W
         activate A
         note over A, DB: Authenticate Existing User
         A--)W: HTTP Response
         deactivate A
+        activate W
+        deactivate W
     else User has no account
         U->>U: Click register button
         U->>W: HTTP GET /register?redirectUrl=<addr>
+        activate W
         W--)U: Register page in HTML
+        deactivate W
         U->>U: Enter new user information
         U->>W: POST /register
+        activate W
         W->>A: Forward HTTP request
+        deactivate W
         activate A
         note over A, DB: Register New User
         A--)W: HTTP Response
+        activate W
         deactivate A
     end
-    W->>U: Forward HTTP response
+    W--)U: Forward HTTP response 
     deactivate W
 ```
+
 ## Authenticate Existing User
-UserAuthenticator requires configuration: token validity duration
-
-SessionTokenValidityDurationSeconds: 14324329
 ```mermaid
-%% %%{init: {
-%%   "theme": "dark",
-%%   "themeVariables": {
-
-%%     "textColor": "#ffffff",
-%%     "actorLineColor": "#787878",
-%%     "signalColor": "#a0a0a0",
-%%     "signalTextColor": "#ffffff",
-%%     "loopTextColor": "#ffffff",
-%%     "noteTextColor": "#ffffff",
-    
-%%     "activationBkgColor": "#404040",
-%%     "activationBorderColor": "#5d5d5d"
-%%   }
-%% }}%%
 sequenceDiagram
     participant H as :HttpHandler<br> {App. Server}
     participant P as :RequestParser<br> {App. Server}
@@ -77,7 +72,7 @@ sequenceDiagram
         deactivate H
     end
         
-    %% else Valid request
+    %% Request is valid
     activate P
     P--)H: Username, password,<br>redirect_addR
     deactivate P
@@ -138,21 +133,6 @@ sequenceDiagram
 
 ## Register New User
 ```mermaid
-%% %%{init: {
-%%   "theme": "dark",
-%%   "themeVariables": {
-
-%%     "textColor": "#ffffff",
-%%     "actorLineColor": "#787878",
-%%     "signalColor": "#a0a0a0",
-%%     "signalTextColor": "#ffffff",
-%%     "loopTextColor": "#ffffff",
-%%     "noteTextColor": "#ffffff",
-    
-%%     "activationBkgColor": "#404040",
-%%     "activationBorderColor": "#5d5d5d"
-%%   }
-%% }}%%
 sequenceDiagram
     participant H as :HttpHandler<br> {App. Server}
     participant P as :RequestParser<br> {App. Server}
@@ -177,6 +157,7 @@ sequenceDiagram
         deactivate H
     end
     
+    %% Request is valid
     activate P
     P--)H: User information and<br>redirect address
     deactivate P
@@ -226,20 +207,6 @@ sequenceDiagram
 
 ## Generate Session Token
 ```mermaid
-%% %%{init: {
-%%   "theme": "dark",
-%%   "themeVariables": {
-
-%%     "textColor": "#ffffff",
-%%     "actorLineColor": "#787878",
-%%     "signalColor": "#a0a0a0",
-%%     "signalTextColor": "#ffffff",
-%%     "loopTextColor": "#ffffff",
-    
-%%     "activationBkgColor": "#404040",
-%%     "activationBorderColor": "#5d5d5d"
-%%   }
-%% }}%%
 sequenceDiagram
     participant A as :UserAuthenicator<br> {App. Server}
     participant DB as Database<br> {DB Server}

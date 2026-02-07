@@ -1,3 +1,6 @@
+[Go back to index](README.md)
+
+# Controller Class Diagram
 ```mermaid
 classDiagram
     direction LR
@@ -21,58 +24,54 @@ classDiagram
     WebServerGateway --* HttpHandler
     
     class RequestParser {
-        +parseSearchReq(req: String)
-        +parseBookCurationReq(req: String)
-        +parseBookSelectReq(req: String)
+        +parseSearchReq(req: String) HTTPRequest
+        +parseBookCurationReq(req: String) HTTPRequest
+        +parseBookSelectReq(req: String) HTTPRequest
         
-        +parseAddBookToCartReq(req: String)
-        +parseDeleteBookFromCartReq(req: String)
+        +parseAddBookToCartReq(req: String) HTTPRequest
+        +parseDeleteBookFromCartReq(req: String) HTTPRequest
         
-        +parseLoginReq(req: String)
-        +parseRegisterReq(req: String)
-        +parseCheckoutReq(req: String)
+        +parseLoginReq(req: String) HTTPRequest
+        +parseRegisterReq(req: String) HTTPRequest
+        +parseCheckoutReq(req: String) HTTPRequest
     }
     
-    %% middleware?
+    %% To authenticate and parse requests
     HttpHandler *-- UserAuthenticator
     HttpHandler *-- RequestParser
 
     namespace Page_Logic {
-        class PageCreator {
-            <<abstract>>
-            +htmlTemplate
-        }
         class SearchPageCreator {
-            +getSearchErrorPage()
-            +getSearchPage(filters: SearchFilter)
+            +getSearchErrorPage() HTML
+            +getSearchPage(filters: SearchFilter) HTML
         }
         class BookCurationPageCreator {
-            +getBookCurationErrorPage()
-            +getPromotionsPage(category: BookCategory)
-            +getBestSellersPage()
+            +getBookCurationErrorPage() HTML
+            +getPromotionsPage(category: BookCategory) HTML
+            +getBestSellersPage() HTML
         }
         class BookSelectPageCreator {
-            +getBookSelectErrorPage()
-            +getBookDetailsPage(book: Book)
+            +getBookSelectErrorPage() HTML
+            +getBookDetailsPage(book: Book) HTML
         }
         class LoginPageCreator {
-            +getLoginErrorPage()
-            +getUsernameNotFoundPage(username: String)
-            +getIncorrectPasswordPage()
+            +getLoginErrorPage() HTML
+            +getUsernameNotFoundPage(username: String) HTML
+            +getIncorrectPasswordPage() HTML
         }
         class RegisterPageCreator {
-            +getRegisterErrorPage()
-            +getUsernameUnavailablePage(username: String)
+            +getRegisterErrorPage() HTML
+            +getUsernameUnavailablePage(username: String) HTML
         }
         class CheckoutPageCreator {
-            +getEmptyCartPage()
-            +getOutOfStockPage(outOfStock: List~Book~)
-            +getPaymentFailPage()
-            +getOrderConfimationPage(orderInfo: Order)
+            +getEmptyCartPage() HTML
+            +getOutOfStockPage(outOfStock: List~Book~) HTML
+            +getPaymentFailPage() HTML
+            +getOrderConfimationPage(orderInfo: Order) HTML
         }
     }
 
-    %% Handler uses Creators
+    %% Handlers use PageCreators
     HttpHandler *-- SearchPageCreator
     HttpHandler *-- BookCurationPageCreator
     HttpHandler *-- BookSelectPageCreator
@@ -85,7 +84,7 @@ classDiagram
             +authenticateUser(username: String, password: String) User
             +createAccount(userInfo: User)
             +getUserInfo(sessionToken: String) User
-            +emptyUserCart(sessionToken: String) boolean
+            +emptyUserCartAndDecrementStock(sessionToken: String) boolean
         }
         class BookRepository {
             +getBooks(filter: SearchFilter) List~Book~
@@ -101,11 +100,11 @@ classDiagram
             +processPayment(info: PaymentInfo, amount: float) boolean
         }
         class EmailService {
-            +sendEmail(body: String) boolean
+            +sendEmail(to: String, subject: String, body: String)
         }
     }
 
-    %% Creators use Services
+    %% PageCreators use Repositories and Services
     BookCurationPageCreator *-- PromotionsRepository
 
     SearchPageCreator *-- BookRepository
@@ -118,16 +117,25 @@ classDiagram
     CheckoutPageCreator *-- EmailService
 
     namespace Gateways {
-        class DbGateway
-        class PaymentGateway
-        class EmailGateway
+        class DbGateway{
+            -dbConnection: TCP
+            +sendQuery(query: String)
+        }
+        class PaymentGateway{
+            -paymentServiceDomainName: String
+            +sendRequest(request: HttpRequest)
+        }
+        class EmailGateway {
+            -emailServiceDomainName: String
+            +sendSmtpMessage(to: String, subject: String, body: String)
+        }
     }
-    
+
+    %% Repositories and Services use Gateways
     UserAuthenticator *-- DbGateway
     OrderRepository *-- DbGateway
     BookRepository *-- DbGateway
 
     PaymentService *-- PaymentGateway
     EmailService *-- EmailGateway
-
 ```
