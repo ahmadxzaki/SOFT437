@@ -1,5 +1,5 @@
 # SOFT 437 Assignment 1
-This directory contains the mermaid source for the sequence and class diagrams.
+This directory contains the mermaid sources for the sequence and class diagrams.
 
 ## Index
 
