@@ -36,7 +36,7 @@ sequenceDiagram
     break Token is expired
         A--)W: HTTP redirect response to<br>/login?redirectUrl=/checkout
         activate W
-        W-->U: Forward HTTP response
+        W--)U: Forward HTTP response
         activate W
     end
 
@@ -162,7 +162,7 @@ sequenceDiagram
         deactivate A
         A ->> E: Send confirmation email
         activate E
-        E ->> A: Ack
+        E --) A: Ack
         deactivate E
         deactivate A
     and
